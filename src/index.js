@@ -35,11 +35,17 @@ async function generateFiles(names) {
 
 async function generateTextAndAudio(nameArr) {
   // Loop through the name array to generate text for each name
+  //if scraped_articles folder does not exist, create it
+  const scrapedArticlesDir = path.join(__dirname, '../content/scraped_articles');
+  if (!fs.existsSync(scrapedArticlesDir)) {
+    fs.mkdirSync(scrapedArticlesDir);
+  }
+
   for (const name of nameArr) {
     try {
       // Read the content of the text file
       let fileName = name.replace(/\s/g, '');
-      const fileContent = fs.readFileSync(path.join(__dirname, `../scraped_articles/${fileName}.txt`), "utf-8");
+      const fileContent = fs.readFileSync(path.join(__dirname, `../content/scraped_articles/${fileName}.txt`), "utf-8");
 
       // Prepare the prompt
       const prompt = `Use the following text to create a script for a youtube essay: \n\n${fileContent}`;

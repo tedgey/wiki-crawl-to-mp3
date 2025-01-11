@@ -6,9 +6,10 @@ describe('Wiki crawling', function() {
   let driver;
   const fs = require('fs');
 
+  // Array of names to search for on wikipedia- edit this array to add more names
   const names = [
-    "Joe DiMaggio",
-    "Mookie Betts",
+    "Freddie Freeman",
+    "Derek Jeter",
   ]
 
   before(async function() {
@@ -45,7 +46,7 @@ describe('Wiki crawling', function() {
       // Send the finalText to a file
       try {
         let formattedName = name.replace(/\s/g, '');
-        fs.writeFileSync(`./scraped_articles/${formattedName}.txt`, finalText);
+        fs.writeFileSync(`./content/scraped_articles/${formattedName}.txt`, finalText);
       } catch (error) {
         console.error("Error:", error);
       }

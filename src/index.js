@@ -15,6 +15,20 @@ const openai = new OpenAI({
 });
 
 async function generateFiles(names) {
+  const directories = [
+    '../content',
+    '../content/generated_text',
+    '../content/generated_audio',
+    '../content/images'
+  ];
+
+  directories.forEach(dir => {
+    const dirPath = path.join(__dirname, dir);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath);
+    }
+  });
+
   await generateTextAndAudio(names);
   await scrapeImages(names);
 }

@@ -1,0 +1,21 @@
+{
+  "name": "wiki-crawl-to-mp3",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "mocha --no-timeouts --exit \"./test/**/*.spec.js\""
+  },
+  "author": "Tom Edgeworth",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openai": "^4.57.0"
+  },
+  "devDependencies": {
+    "mocha": "^11.0.1"
+  }
+}

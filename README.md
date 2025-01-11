@@ -3,9 +3,8 @@ article, as well as download x (default 10) pictures of each person listed- all 
 
 How to use:
 1. go into grabData.spec.js and adjust the "names" array to include the names of the files you want to crawl.
-    This will automatically download the files into the scraped_articles folder. 
 2. npm start to start the server
-3. run the mocha test to scrape the data (in UI or in terminal)
+3. run the mocha test to scrape the data (in UI or in terminal). *This will automatically download files into their dedicated folders.*
 
     ```npm test```
 

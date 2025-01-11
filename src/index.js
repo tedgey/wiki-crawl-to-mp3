@@ -47,7 +47,7 @@ async function generateTextAndAudio(nameArr) {
 
       await textToSpeech(generatedText, fileName);
       // Save the generated text to a file
-      fs.writeFileSync(path.join(__dirname, `../generated_text/${fileName}.txt`), generatedText);
+      fs.writeFileSync(path.join(__dirname, `../content/generated_text/${fileName}.txt`), generatedText);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -56,7 +56,7 @@ async function generateTextAndAudio(nameArr) {
 
 async function textToSpeech(text, fileName) {
   console.log('start text to speech', fileName);
-  const speechFile = path.resolve(__dirname, `../generated_audio/baseball/${fileName}.mp3`);
+  const speechFile = path.resolve(__dirname, `../content/generated_audio/baseball/${fileName}.mp3`);
   const mp3 = await openai.audio.speech.create({
     model: "tts-1",
     voice: "alloy",

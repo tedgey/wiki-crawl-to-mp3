@@ -5,7 +5,7 @@ def download_images(names):
     print("names:", names)
     for name in names:
         print("Downloading images for", name)
-        pi.download(name, limit=10, directory='../content/images')
+        pi.download(name, limit=10)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download images for given names.')

@@ -10,3 +10,9 @@ How to use:
 
 This will generate text, create tts mp3s of each text, and snag 10 images of each person listed.
 
+4. Review content
+5. Combine content with
+
+``` python scripts/combine.py ["Albert Pujols", "Babe Ruth", "Barry Bonds", "Bob Feller", "Chipper Jones"] ``` -provide an array of names
+
+python scripts/combine.py ["Christy Mathewson", "Clayton Kershaw", "Derek Jeter", "Freddie Freeman", "Gerrit Cole", "Greg Maddux", "Grover Cleveland Alexander", "Honus Wagner", "Joe DiMaggio", "Johnny Bench", "Ken Griffey Jr", "Lefty Grove", "Lou Gehrig", "Mark McGuire", "Mickey Mantle", "Mike Schmidt", "Mike Trout", "Mookie Betts", "Nolan Ryan", "Randy Johnson", "Sammy Sosa", "Sandy Koufax", "Shohei Ohtani", "Ted Williams", "Tom Seaver", "Ty Cobb", "Walter Johnson", "Warren Spahn", "Willie Mays"]

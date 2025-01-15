@@ -33,3 +33,7 @@ dist/
 # Text files
 *.txt
 
+# Video files
+*.mp4
+
+scripts/__pycache__/combine.cpython-311.pyc

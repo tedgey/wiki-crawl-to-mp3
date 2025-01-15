@@ -14,7 +14,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-async function generateFiles(names) {
+async function generateFiles(names, topic) {
   const directories = [
     '../content',
     '../content/generated_text',
@@ -30,7 +30,7 @@ async function generateFiles(names) {
   });
 
   await generateTextAndAudio(names);
-  await scrapeImages(names);
+  await scrapeImages(names, topic);
 }
 
 async function generateTextAndAudio(nameArr) {
@@ -87,11 +87,11 @@ async function textToSpeech(text, fileName) {
   console.log('Audio file saved:', speechFile);
 }
 
-async function scrapeImages(args = []) {
+async function scrapeImages(args = [], topic) {
   // Access scrape_images.py in the scripts folder and pass in the names array
   const quotedArgs = args.map(name => `"${name}"`).join(' ');
 
-  exec(`python3 ${path.join(__dirname, '../scripts/scrape_images.py')} ${quotedArgs}`, (error, stdout, stderr) => {
+  exec(`python3 ${path.join(__dirname, '../scripts/scrape_images.py')} ${quotedArgs} ${topic}`, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error.message}`);
       return;
@@ -105,10 +105,10 @@ async function scrapeImages(args = []) {
 }
 
 app.post('/generate-files', async (req, res) => {
-  let { nameArr } = req.body;
+  let { nameArr, topic } = req.body;
 
   try {
-    await generateFiles(nameArr);
+    await generateFiles(nameArr, topic);
     res.status(200).send('Text and audio generated successfully');
   } catch (error) {
     res.status(500).send(`Error generating text and audio: ${error}`);
@@ -116,15 +116,38 @@ app.post('/generate-files', async (req, res) => {
 });
 
 app.post('/generate-images', async (req, res) => {
-  let { nameArr } = req.body;
+  let { nameArr, topic } = req.body;
 
   try {
-    await scrapeImages(nameArr);
+    await scrapeImages(nameArr, topic);
     res.status(200).send('Images generated successfully');
   } catch (error) {
     res.status(500).send(`Error generating images: ${error}`);
   }
 });
+
+app.post('/generate-video', async (req, res) => {
+  let { nameArr } = req.body;
+
+  try {
+
+    exec(`python3 ${path.join(__dirname, '../scripts/combine.py')} ${ nameArr } `, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.error(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
+
+    res.status(200).send('Video generated successfully');
+  } catch (error) {
+    res.status(500).send(`Error generating video: ${error}`);
+  }
+},
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

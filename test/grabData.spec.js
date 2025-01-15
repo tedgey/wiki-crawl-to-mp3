@@ -1,30 +1,38 @@
-const {By, Builder, Browser} = require('selenium-webdriver');
+const { By, Builder, Browser } = require('selenium-webdriver');
+const chrome = require('selenium-webdriver/chrome');
 const assert = require("assert");
 const axios = require('axios');
+const fs = require('fs');
 
 describe('Wiki crawling', function() {
   let driver;
-  const fs = require('fs');
+  
+  const topic = ['baseball'];
 
-  // Array of names to search for on wikipedia- edit this array to add more names
   const names = [
-    "Freddie Freeman",
-    "Derek Jeter",
-  ]
+    "Albert Pujols",
+  ];
 
   before(async function() {
-    driver = await new Builder().forBrowser(Browser.CHROME).build();
+    // Set Chrome options to run in headless mode
+    let options = new chrome.Options();
+    options.addArguments('headless');
+    options.addArguments('disable-gpu');
+    options.addArguments('window-size=1920,1080');
+
+    driver = await new Builder().forBrowser(Browser.CHROME).setChromeOptions(options).build();
   });
 
   after(async function() {
     await driver.quit();
   });
 
-  // Loop through names array
+  // Loop through names array and create tests dynamically
   names.forEach(name => {
     it(`should grab text from wikipedia for ${name}`, async function() {
+      this.timeout(60000); // Set timeout to 60 seconds (60000 milliseconds)
       let wikiName = name.replace(/\s/g, '_');
-      await driver.get(`https://en.wikipedia.org/wiki/${wikiName}`)
+      await driver.get(`https://en.wikipedia.org/wiki/${wikiName}`);
 
       let title = await driver.getTitle();
       assert.equal(`${name} - Wikipedia`, title);
@@ -54,9 +62,12 @@ describe('Wiki crawling', function() {
   });
 
   it('should run the generate files script', async function() {
-    this.timeout(60000); // Set timeout to 60 seconds (60000 milliseconds) - still figuring out an optimal value
+    this.timeout(60000); // Set timeout to 60 seconds (60000 milliseconds)
+    console.log('nameArr:', names);
+    console.log('topic:', topic);
     try {
-      const response = await axios.post('http://localhost:3000/generate-files', { nameArr: names });
+      const response = await axios.post('http://localhost:3000/generate-files', { nameArr: names, topic: topic });
+      console.log('Request payload:', { nameArr: names, topic: topic });
       assert.equal(response.status, 200);
       console.log('Response:', response.data);
     } catch (error) {

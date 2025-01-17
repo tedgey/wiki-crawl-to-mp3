@@ -19,7 +19,9 @@ async function generateFiles(names, topic) {
     '../content',
     '../content/generated_text',
     '../content/generated_audio',
-    '../content/images'
+    `../content/generated_audio/${topic}`,
+    '../images',
+    `../images/${topic}`
   ];
 
   directories.forEach(dir => {
@@ -76,7 +78,7 @@ async function generateTextAndAudio(nameArr) {
 
 async function textToSpeech(text, fileName) {
   console.log('start text to speech', fileName);
-  const speechFile = path.resolve(__dirname, `../content/generated_audio/baseball/${fileName}.mp3`);
+  const speechFile = path.resolve(__dirname, `../content/generated_audio/${topic}/${fileName}.mp3`);
   const mp3 = await openai.audio.speech.create({
     model: "tts-1",
     voice: "alloy",
@@ -147,7 +149,7 @@ app.post('/generate-video', async (req, res) => {
   } catch (error) {
     res.status(500).send(`Error generating video: ${error}`);
   }
-},
+}),
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

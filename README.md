@@ -17,3 +17,7 @@ This will generate text, create tts mp3s of each text, and snag 10 images of eac
 ``` python scripts/combine.py ["Albert Pujols", "Babe Ruth", "Barry Bonds", "Bob Feller", "Chipper Jones"] ``` -provide an array of names
 
 This will produce a video with the 10 images and backing tts mp3.
+
+
+TODO:
+Create a frontend that will allow users to create their own podcasts, sorted into subjects

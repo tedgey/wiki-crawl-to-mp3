@@ -31,8 +31,36 @@ async function generateFiles(names, topic) {
     }
   });
 
+  await scrapeArticles(names);
   await generateTextAndAudio(names);
   await scrapeImages(names, topic);
+}
+
+async function scrapeArticles(nameArr) {
+  // Loop through the name array to scrape articles for each name
+  //if scraped_articles folder does not exist, create it
+  const scrapedArticlesDir = path.join(__dirname, '../content/scraped_articles');
+  if (!fs.existsSync(scrapedArticlesDir)) {
+    fs.mkdirSync(scrapedArticlesDir);
+  }
+
+  try {
+    // Access scrape_wikipedia.py in the scripts folder and pass in a list of names
+    exec (`python3 ${path.join(__dirname, '../scripts/scrape_wikipedia.py')} ${nameArr}`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.error(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
+    
+  } catch (error) {
+    console.error("Error:", error);
+  }
 }
 
 async function generateTextAndAudio(nameArr) {

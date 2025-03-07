@@ -2,8 +2,6 @@
 import { Link } from 'react-router-dom';
 import { googleLogout } from '@react-oauth/google';
 
-
-
 const TopNav = () => {
   return (
     <>

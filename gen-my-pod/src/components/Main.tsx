@@ -1,7 +1,7 @@
 // main content page that will consist of three sections- 
 // a side nav for topics, a secondary nav for subjects, and a main content area for the content
-import SideNav from './SideNav';
-import SecondaryNav from './SecondaryNav';
+import SideNav from './SideNav.tsx';
+import SecondaryNav from './SecondaryNav.tsx';
 
 const Main = () => {
   return (

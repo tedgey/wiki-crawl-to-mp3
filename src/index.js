@@ -19,7 +19,9 @@ async function generateFiles(names, topic) {
     '../content',
     '../content/generated_text',
     '../content/generated_audio',
-    '../content/images'
+    `../content/generated_audio/${topic}`,
+    '../images',
+    `../images/${topic}`
   ];
 
   directories.forEach(dir => {
@@ -29,8 +31,36 @@ async function generateFiles(names, topic) {
     }
   });
 
+  await scrapeArticles(names);
   await generateTextAndAudio(names);
   await scrapeImages(names, topic);
+}
+
+async function scrapeArticles(nameArr) {
+  // Loop through the name array to scrape articles for each name
+  //if scraped_articles folder does not exist, create it
+  const scrapedArticlesDir = path.join(__dirname, '../content/scraped_articles');
+  if (!fs.existsSync(scrapedArticlesDir)) {
+    fs.mkdirSync(scrapedArticlesDir);
+  }
+
+  try {
+    // Access scrape_wikipedia.py in the scripts folder and pass in a list of names
+    exec (`python3 ${path.join(__dirname, '../scripts/scrape_wikipedia.py')} ${nameArr}`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.error(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
+    
+  } catch (error) {
+    console.error("Error:", error);
+  }
 }
 
 async function generateTextAndAudio(nameArr) {
@@ -76,7 +106,7 @@ async function generateTextAndAudio(nameArr) {
 
 async function textToSpeech(text, fileName) {
   console.log('start text to speech', fileName);
-  const speechFile = path.resolve(__dirname, `../content/generated_audio/baseball/${fileName}.mp3`);
+  const speechFile = path.resolve(__dirname, `../content/generated_audio/${topic}/${fileName}.mp3`);
   const mp3 = await openai.audio.speech.create({
     model: "tts-1",
     voice: "alloy",
@@ -147,7 +177,7 @@ app.post('/generate-video', async (req, res) => {
   } catch (error) {
     res.status(500).send(`Error generating video: ${error}`);
   }
-},
+}),
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

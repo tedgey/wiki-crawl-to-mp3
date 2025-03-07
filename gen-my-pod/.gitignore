@@ -1,0 +1,47 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node.js
+node_modules/
+
+# Environment variables
+.env
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# Build files
+dist/
+dist-ssr/
+
+# Image files
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Music files
+*.mp3
+
+# Text files
+*.txt
+
+# Video files
+*.mp4
+
+# Python cache files
+scripts/__pycache__/combine.cpython-311.pyc

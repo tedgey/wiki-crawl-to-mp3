@@ -1,0 +1,38 @@
+#root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  font-weight: 500;
+  color: #4049fa;
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+a:hover {
+  color: #646cff;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.card {
+  padding: 2em;
+  margin: 1em;
+  border-radius: 8px;
+  background-color: whitesmoke;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+

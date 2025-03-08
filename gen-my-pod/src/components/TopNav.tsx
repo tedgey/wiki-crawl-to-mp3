@@ -9,7 +9,7 @@ const TopNav = () => {
             <h3>Gen My Pod</h3>
             <ul className="d-flex justify-content-between align-items-center list-unstyled w-25"> 
                 <li className="mr-2">
-                    <Link to="/">Home</Link>
+                    <Link to="/my_pods">Home</Link>
                 </li>
                 <li>
                     <Link to="/about">About</Link>
@@ -26,7 +26,7 @@ const TopNav = () => {
 
         <ul className="d-flex justify-content-around align-items-center list-unstyled w-25 my-1"> 
             <li className="mr-2">
-                <Link to="/">Generate</Link>
+                <Link to="/generate">Generate</Link>
             </li>
             <li className="mr-2">
                 {/* TODO: my pods should be based on user id */}

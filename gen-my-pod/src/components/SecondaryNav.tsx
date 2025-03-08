@@ -11,7 +11,11 @@ const CustomCard = styled.div`
 const SecondaryNav = () => {
     return (
         <CustomCard className="card">
-            <h5>Subjects</h5>
+            <div className="d-flex justify-content-between">
+                <h5>Subjects</h5>
+                <a className='clickable'>x</a>
+            </div>
+            
             <hr />
             <nav className="side-nav">
                 <ul>

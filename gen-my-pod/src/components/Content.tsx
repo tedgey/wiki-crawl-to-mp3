@@ -3,20 +3,21 @@
 import SideNav from './SideNav.tsx';
 import SecondaryNav from './SecondaryNav.tsx';
 
-const Main = () => {
+const Content = () => {
   return (
     <div className="main d-flex bg-light">
       <SideNav />
       <SecondaryNav />
-      <div className="content">
-        <h2>Content</h2>
+      <div className="content w-50">
+        <h2>Albert Pujols</h2>
         <p>
-          This is the main content area. The content will be displayed here.
+          Excepteur efficient emerging, minim veniam anim aute carefully curated Ginza conversation exquisite perfect nostrud nisi intricate Content. Qui  international first-class nulla ut. Punctual adipisicing, essential lovely queen tempor eiusmod irure. Exclusive izakaya charming Scandinavian impeccable aute quality of life soft power pariatur Melbourne occaecat discerning. Qui wardrobe aliquip, et Porter destination Toto remarkable officia Helsinki excepteur Basset hound. Zürich sleepy perfect consectetur.
         </p>
+      
       </div>
     </div>
   );
 };
 
-export default Main;
+export default Content;
 

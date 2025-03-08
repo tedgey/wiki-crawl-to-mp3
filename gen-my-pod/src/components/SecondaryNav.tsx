@@ -2,10 +2,17 @@
 //it will consist of a list of subjects that will be displayed in the secondary nav
 // clicking on a subject will take the user to the respective subject page
 import { Link } from 'react-router-dom';
+import styled from 'styled-components'
+
+const CustomCard = styled.div`
+    min-width: 10%;
+`;
 
 const SecondaryNav = () => {
     return (
-        <div className="card">
+        <CustomCard className="card">
+            <h5>Subjects</h5>
+            <hr />
             <nav className="side-nav">
                 <ul>
                     <li>
@@ -19,8 +26,8 @@ const SecondaryNav = () => {
                     </li>
                 </ul>
             </nav>
-        </div>
-      );
+        </CustomCard>
+    );
 };
 
 export default SecondaryNav;

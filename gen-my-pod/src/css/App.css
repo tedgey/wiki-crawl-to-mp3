@@ -27,12 +27,15 @@ ul {
   padding: 0;
 }
 
+.main {
+  flex: 1;
+  display: flex;
+}
+
 .card {
-  padding: 2em;
-  margin: 1em;
+  padding: 1em;
+  margin: .5em;
   border-radius: 8px;
   background-color: whitesmoke;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
-

@@ -4,7 +4,7 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 import './css/App.css';
 import TopNav from './components/TopNav';
-import Main from './components/Main';
+import Content from './components/Content';
 
 function App() {
   const [isSignedIn, setIsSignedIn] = useState(true);
@@ -24,7 +24,7 @@ function App() {
         {isSignedIn ? (
           <>
             <TopNav />
-            <Main />
+            <Content />
           </>
         ) : (
           <>

@@ -6,6 +6,7 @@ import styled from 'styled-components'
 
 const CustomCard = styled.div`
     min-width: 10%;
+    height: fit-content;
 `;
 
 const SecondaryNav = () => {

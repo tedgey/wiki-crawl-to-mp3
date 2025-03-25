@@ -1,4 +1,4 @@
-const ContentWrapper = () => {
+const MediaWrapper = () => {
     return (
         <div>
             <h2>Albert Pujols</h2>
@@ -16,4 +16,4 @@ const ContentWrapper = () => {
     );
   };
   
-  export default ContentWrapper;
+  export default MediaWrapper;

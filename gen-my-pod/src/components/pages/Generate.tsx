@@ -32,8 +32,8 @@ const Generate = () => {
       }
 
       setSuccess(`Pod generating!`);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.');
+    } catch (err: unknown) {
+      setError('An error occurred. Please try again.');
       console.log('Error generating pod:', err);
     } finally {
       setLoading(false);

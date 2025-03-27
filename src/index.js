@@ -132,13 +132,13 @@ async function generateTextAndAudio(nameArr, topic) {
       }
 
       // Prepare the prompt
-      const prompt = `Use the following text to create a script for a YouTube essay: \n\n${fileContent}`;
+      const prompt = `Use the following text to create a script for an essay to be read aloud: \n\n${fileContent}`;
 
       // Call the OpenAI API
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'developer', content: 'You are a creative writer and YouTuber. You are creating a script based on a .txt file that will then be read out loud. Please respond solely with what you will say as the narrator of the script, with no scene directions. It is vital to keep your response to under 4500 characters.' },
+          { role: 'developer', content: 'You are a creative writer. You are creating a script based on a .txt file that will then be read out loud. Please respond solely with what you will say as the narrator of the script, with no scene directions. It is vital to keep your response to under 4500 characters.' },
           { role: 'user', content: prompt },
         ],
       });

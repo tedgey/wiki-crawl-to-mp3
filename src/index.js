@@ -6,6 +6,8 @@ const { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsCommand } = req
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+const events = require('events');
+const eventEmitter = new events.EventEmitter();
 
 const app = express();
 const cors = require('cors');
@@ -16,6 +18,24 @@ app.use(express.json());
 
 // Initialize the S3 client
 const s3 = new S3Client({ region: 'us-east-2' }); // Replace with your bucket's region
+
+// SSE endpoint
+app.get('/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  const onGenerateComplete = (message) => {
+    res.write(`data: ${JSON.stringify(message)}\n\n`);
+  };
+
+  eventEmitter.on('generateComplete', onGenerateComplete);
+
+  // Clean up the listener when the connection is closed
+  req.on('close', () => {
+    eventEmitter.removeListener('generateComplete', onGenerateComplete);
+  });
+});
 
 function capitalizeWords(input) {
   return input
@@ -43,19 +63,15 @@ async function generateFiles(names, topic) {
   console.log('Generating files for:', names);
 
   try {
-    // Run scrapeArticles first
     await scrapeArticles(names, topic);
-    console.log('Finished scraping articles.');
-
-    // Then run generateTextAndAudio
     await generateTextAndAudio(names, topic);
-    console.log('Finished generating text and audio.');
-
-    // Finally, run generateImage
     await generateImage(names, topic);
-    console.log('Finished generating images.');
+
+    console.log('Finished generating files.');
+    eventEmitter.emit('generateComplete', { status: 'success', topic, names });
   } catch (error) {
     console.error('Error in generateFiles:', error);
+    eventEmitter.emit('generateComplete', { status: 'error', error: error.message });
     throw error;
   }
 }
@@ -187,10 +203,15 @@ async function textToSpeech(text, fileName, topic) {
 
 async function generateImage(nameArr, topic) {
   console.log('Generating image for:', nameArr);
+
+  // Replace spaces with underscores in names and topic
+  const sanitizedNames = nameArr.map((name) => name.replace(/\s/g, '_'));
+  const sanitizedTopic = topic.replace(/\s/g, '_');
+
   try {
     const pythonPath = path.join(__dirname, '../.venv/Scripts/python.exe'); // Path to Python in virtual environment
     const scriptPath = path.join(__dirname, '../scripts/scrape_images.py');
-    const command = `${pythonPath} ${scriptPath} "${nameArr.join(' ')}" "${topic}"`;
+    const command = `${pythonPath} ${scriptPath} "${sanitizedNames.join(' ')}" "${sanitizedTopic}"`;
 
     console.log('Executing command:', command);
 
@@ -331,9 +352,11 @@ app.get('/get-text/:topic/:fileName', async (req, res) => {
 // API endpoint to get the image file for a specific topic and file name
 app.get('/get-image/:topic/:fileName', async (req, res) => {
   const { topic, fileName } = req.params;
+  // Replace spaces with underscores in the file name
+  const sanitizedFileName = fileName.replace(/\s/g, '_');
 
   // Construct the S3 key based on the new format
-  const s3Key = `images/${topic}/${fileName.replace(' ', '_')}/${fileName}_1.jpeg`;
+  const s3Key = `images/${topic}/${sanitizedFileName.replace(' ', '_')}/${sanitizedFileName}_1.jpeg`;
   const s3Params = {
     Bucket: 'make-my-pod',
     Key: s3Key,

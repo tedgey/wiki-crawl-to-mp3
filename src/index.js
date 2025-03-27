@@ -2,8 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const OpenAI = require('openai');
 const path = require('path');
-const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
-
+const { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsCommand } = require('@aws-sdk/client-s3');
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
@@ -201,6 +200,104 @@ app.post('/generate-files', async (req, res) => {
   } catch (error) {
     console.error('Error in /generate-files:', error);
     res.status(500).send(`Error generating text and audio: ${error}`);
+  }
+});
+
+// API endpoint to get the list of generated files
+app.get('/list-files', async (req, res) => {
+  const s3Params = {
+    Bucket: 'make-my-pod',
+    Prefix: 'mp3s/',
+  };
+
+  try {
+    const data = await s3.send(new ListObjectsCommand(s3Params));
+
+    // Extract unique topic names from the keys
+    const topics = Array.from(
+      new Set(
+        data.Contents
+          .map(file => file.Key) // Get the full key
+          .filter(key => key !== 'mp3s/') // Exclude the root prefix
+          .map(key => key.replace('mp3s/', '').split('/')[0]) // Extract the topic name
+      )
+    );
+
+    console.log('List of topics:', topics);
+
+    res.status(200).json(topics);
+  } catch (error) {
+    console.error('Error in /list-files:', error);
+    res.status(500).send(`Error listing files: ${error}`);
+  }
+});
+
+// API endpoint to get the list of generated files for a specific topic
+app.get('/list-files/:topic', async (req, res) => {
+  const { topic } = req.params;
+  const s3Params = {
+    Bucket: 'make-my-pod',
+    Prefix: `mp3s/${topic}/`,
+  };
+
+  try {
+    const data = await s3.send(new ListObjectsCommand(s3Params));
+
+    // Extract file names from the keys, format them, and remove the .mp3 extension
+    const files = data.Contents.map(file => {
+      const fileName = file.Key.replace(`mp3s/${topic}/`, '') // Remove the prefix
+        .replace('.mp3', '') // Remove the .mp3 extension
+        .replace(/([a-z])([A-Z])/g, '$1 $2'); // Add a space between camel case words
+      return fileName;
+    });
+
+    console.log(`List of files for topic ${topic}:`, files);
+
+    res.status(200).json(files);
+  } catch (error) {
+    console.error('Error in /list-files/:topic:', error);
+    res.status(500).send(`Error listing files for topic ${topic}: ${error}`);
+  }
+});
+
+// API endpoint to get the audio file for a specific topic and file name
+app.get('/get-file/:topic/:fileName', async (req, res) => {
+  const { topic, fileName } = req.params;
+  const s3Key = `mp3s/${topic}/${fileName}.mp3`;
+  const s3Params = {
+    Bucket: 'make-my-pod',
+    Key: s3Key,
+  };
+
+  try {
+    const s3Object = await s3.send(new GetObjectCommand(s3Params));
+    const audioStream = s3Object.Body;
+
+    res.set('Content-Type', 'audio/mpeg');
+    audioStream.pipe(res);
+  } catch (error) {
+    console.error('Error in /get-file/:topic/:fileName:', error);
+    res.status(500).send(`Error getting file ${fileName}.mp3 for topic ${topic}: ${error}`);
+  }
+});
+
+// API endpoint to get the text file for a specific topic and file name
+app.get('/get-text/:topic/:fileName', async (req, res) => {
+  const { topic, fileName } = req.params;
+  const s3Key = `scripts/${topic}/${fileName}.txt`;
+  const s3Params = {
+    Bucket: 'make-my-pod',
+    Key: s3Key,
+  };
+
+  try {
+    const s3Object = await s3.send(new GetObjectCommand(s3Params));
+    const text = await streamToString(s3Object.Body);
+
+    res.status(200).send(text);
+  } catch (error) {
+    console.error('Error in /get-text/:topic/:fileName:', error);
+    res.status(500).send(`Error getting text file ${fileName}.txt for topic ${topic}: ${error}`);
   }
 });
 

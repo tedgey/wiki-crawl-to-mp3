@@ -1,8 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+import boto3
 
-def scrape_wikipedia(names):
+def scrape_wikipedia(names, topic):
     # Set Chrome options to run in headless mode
     options = Options()
     options.add_argument('headless')
@@ -11,6 +12,14 @@ def scrape_wikipedia(names):
 
     # Create a new instance of the Chrome driver
     driver = webdriver.Chrome(options=options)
+
+    # Initialize the S3 client
+    s3 = boto3.client('s3')
+
+    # Define your S3 bucket name
+    bucket_name = 'make-my-pod'
+
+    topic_folder = f'scraped-articles/{topic}'
 
     for name in names:
         wiki_name = name.replace(" ", "_")
@@ -32,24 +41,33 @@ def scrape_wikipedia(names):
         if len(final_text) > 1:
             print('final_text length:', len(final_text))
 
-        # Send the final_text to a file
+        # Upload the final_text directly to S3
         try:
             formatted_name = name.replace(" ", "")
-            with open(f'./content/scraped_articles/{formatted_name}.txt', 'w', encoding='utf-8') as file:
-                file.write(final_text)
+            s3_key = f'{topic_folder}/{formatted_name}.txt'
+
+            # Upload the text content as a file to S3
+            s3.put_object(
+                Bucket=bucket_name,
+                Key=s3_key,
+                Body=final_text,
+                ContentType='text/plain',
+                ACL='private'  # Set the ACL (optional, e.g., 'private' or 'public-read')
+            )
+            print(f"Uploaded text for {name} to s3://{bucket_name}/{s3_key}")
+
         except Exception as e:
-            print("Error:", e)
+            print(f"Error uploading to S3 for {name}: {e}")
 
     driver.quit()
 
-# script should accept a list of names as an argument
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Scrape text from Wikipedia script.')
     parser.add_argument('names', nargs='+', help='List of names to scrape text for')
+    parser.add_argument('topic', help='Topic to create s3 folder if needed')
     args = parser.parse_args()
-    scrape_wikipedia(args.names)
+    scrape_wikipedia(args.names, args.topic)
 
 # Run the script with the following command:
 # python scripts/scrape_wikipedia.py "Albert Pujols" baseball
-# This will scrape the text from the Wikipedia page for Albert Pujols and save it to a file in the scraped_articles directory.

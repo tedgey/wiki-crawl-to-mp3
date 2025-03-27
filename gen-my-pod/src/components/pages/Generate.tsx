@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Generate = () => {
   const [name, setName] = useState('');
@@ -6,6 +6,41 @@ const Generate = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    const eventSource = new EventSource('http://localhost:3000/events');
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.status === 'success') {
+        setLoading(false);
+        setSuccess('Success! Redirecting...');
+        console.log('Files generated successfully:', data);
+
+        // Redirect to /my_pods after a short delay
+        setTimeout(() => {
+          window.location.href = '/my_pods';
+        }, 2000);
+      } else if (data.status === 'error') {
+        setLoading(false);
+        setError(`Error: ${data.error}`);
+        console.error('Error generating files:', data.error);
+      }
+    };
+
+    eventSource.onerror = () => {
+      setLoading(false);
+      setError('Error with SSE connection.');
+      console.error('Error with SSE connection.');
+      eventSource.close();
+    };
+
+    // Cleanup the EventSource when the component unmounts
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission behavior
@@ -25,13 +60,13 @@ const Generate = () => {
         body: JSON.stringify({ name, topic }),
       });
 
-      console.log("response", response);
+      console.log('response', response);
 
       if (response.status !== 200) {
         throw new Error('Failed to generate pod. Please try again.');
       }
 
-      setSuccess(`Pod generating!`);
+      setSuccess('Generating...');
     } catch (err: unknown) {
       setError('An error occurred. Please try again.');
       console.log('Error generating pod:', err);
@@ -45,18 +80,6 @@ const Generate = () => {
       <h1>Generate a Pod</h1>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="name">Name</label>
-          <input
-            type="text"
-            className="form-control"
-            id="name"
-            placeholder="Enter name"
-            value={name}
-            onChange={(e) => setName(e.target.value)} // Correctly update `name` state
-            required
-          />
-        </div>
-        <div className="form-group">
           <label htmlFor="topic">Topic</label>
           <input
             type="text"
@@ -65,6 +88,18 @@ const Generate = () => {
             placeholder="Enter topic"
             value={topic}
             onChange={(e) => setTopic(e.target.value)} // Correctly update `topic` state
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            className="form-control"
+            id="name"
+            placeholder="Enter name"
+            value={name}
+            onChange={(e) => setName(e.target.value)} // Correctly update `name` state
             required
           />
         </div>

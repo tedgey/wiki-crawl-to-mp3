@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faPause, faStepBackward, faStepForward } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faPause, faStepBackward, faStepForward, faVolumeUp } from '@fortawesome/free-solid-svg-icons';
 
 interface MediaPlayerProps {
   source: string; // The source URL for the audio file
@@ -30,11 +30,18 @@ const VolumeSlider = styled.input`
   width: 100px;
 `;
 
+const ProgressBar = styled.input`
+  width: 200%;
+  margin-top: 10px;
+`;
+
 const MediaPlayer: React.FC<MediaPlayerProps> = ({ source, playlist = [] }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [volume, setVolume] = useState<number>(0.5); // Default volume set to 0.5 (half)
+  const [progress, setProgress] = useState<number>(0); // Current progress of the track
+  const [duration, setDuration] = useState<number>(0); // Total duration of the track
 
   const currentSource = playlist.length > 0 ? playlist[currentTrackIndex] : source;
 
@@ -76,6 +83,31 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ source, playlist = [] }) => {
     }
   };
 
+  const handleProgressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newProgress = parseFloat(event.target.value);
+    setProgress(newProgress);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newProgress; // Seek to the selected time
+    }
+  };
+
+  // Update progress as the track plays
+  useEffect(() => {
+    const updateProgress = () => {
+      if (audioRef.current) {
+        setProgress(audioRef.current.currentTime);
+        setDuration(audioRef.current.duration || 0);
+      }
+    };
+
+    if (audioRef.current) {
+      audioRef.current.addEventListener('timeupdate', updateProgress);
+      return () => {
+        audioRef.current?.removeEventListener('timeupdate', updateProgress);
+      };
+    }
+  }, []);
+
   // Set the default volume to 0.5 when the component mounts
   useEffect(() => {
     if (audioRef.current) {
@@ -99,19 +131,29 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ source, playlist = [] }) => {
         onEnded={nextTrack} // Automatically play the next track when the current one ends
       />
       <p>{currentSource ? currentSource.split('/').pop() : 'No track selected'}</p>
-      <Controls>
-        <button onClick={previousTrack} disabled={playlist.length === 0} className="btn btn-primary">
-          <FontAwesomeIcon icon={faStepBackward} /> {/* Previous Icon */}
-        </button>
-        <button onClick={isPlaying ? pauseAudio : playAudio} className="btn btn-primary">
-          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} /> {/* Pause/Play Icon */}
-        </button>
-        <button onClick={nextTrack} disabled={playlist.length === 0} className="btn btn-primary">
-          <FontAwesomeIcon icon={faStepForward} /> {/* Next Icon */}
-        </button>
-      </Controls>
-      <div>
-        <label htmlFor="volume">Volume:</label>
+        <div className="d-flex flex-column align-items-center">
+            <Controls>
+                <button onClick={previousTrack} disabled={playlist.length === 0} className="btn btn-primary">
+                <FontAwesomeIcon icon={faStepBackward} /> {/* Previous Icon */}
+                </button>
+                <button onClick={isPlaying ? pauseAudio : playAudio} className="btn btn-primary">
+                <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} /> {/* Pause/Play Icon */}
+                </button>
+                <button onClick={nextTrack} disabled={playlist.length === 0} className="btn btn-primary">
+                <FontAwesomeIcon icon={faStepForward} /> {/* Next Icon */}
+                </button>
+            </Controls>
+            <ProgressBar
+                type="range"
+                min="0"
+                max={duration || 0}
+                step="0.1"
+                value={progress}
+                onChange={handleProgressChange}
+            />
+        </div>
+      <div className="d-flex align-items-center">
+        <FontAwesomeIcon icon={faVolumeUp} className="me-2" />
         <VolumeSlider
           id="volume"
           type="range"

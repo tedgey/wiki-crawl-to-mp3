@@ -27,6 +27,12 @@ ul {
   padding: 0;
 }
 
+hr {
+  margin: .5rem;
+  border: 0;
+  border-top: 1px solid #252525;
+}
+
 .main {
   flex: 1;
   display: flex;
@@ -42,4 +48,14 @@ ul {
 
 .clickable {
   cursor: pointer;
+}
+
+.side-nav ul li.selected a {
+  color: #646cff; /* Change to your desired color */
+  font-weight: bold;
+}
+
+.secondary-nav ul li.selected a {
+  color: #646cff; /* Change to your desired color */
+  font-weight: bold;
 }

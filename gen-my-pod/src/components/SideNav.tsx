@@ -38,7 +38,7 @@ const SideNav = ({ onTopicSelect }: SideNavProps) => {
   };
 
   return (
-    <CustomCard className="card">
+    <CustomCard className='card overflow-auto'>
       <h5>Your Library</h5>
       <hr />
       <nav className="side-nav">

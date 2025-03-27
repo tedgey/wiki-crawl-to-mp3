@@ -7,12 +7,14 @@ import TopNav from './components/TopNav';
 import ContentWrapper from './components/ContentWrapper';
 import Generate from './components/pages/Generate';
 import MyPods from './components/pages/MyPods';
+import MediaPlayer from './components/MediaPlayer';
 import HomePage from './components/pages/HomePage';
 import TopicPage from './components/pages/TopicPage';
 import NotFoundPage from './components/pages/NotFoundPage';
 
 function App() {
   const [isSignedIn, setIsSignedIn] = useState(true);
+  const [mediaSource, setMediaSource] = useState<string>(''); // State for MediaPlayer's source
 
   const handleSignInSuccess = (credentialResponse: any) => {
     console.log('Sign in successful:', credentialResponse);
@@ -23,6 +25,13 @@ function App() {
     console.error('Sign in failed');
   };
 
+  // Function to update the MediaPlayer source
+  const updateMediaSource = (topic: string, subject: string) => {
+    const source = `http://d31ask49tnw722.cloudfront.net/mp3s/${topic}/${subject}.mp3`;
+    setMediaSource(source);
+    console.log(`Media source updated to: ${source}`);
+  };
+
   return (
     <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID"> {/* Replace with your Google Client ID */}
       <Router>
@@ -30,19 +39,37 @@ function App() {
           <>
             <TopNav />
             <Routes>
-              <Route path="/" element={<ContentWrapper><HomePage /></ContentWrapper>} />
-              <Route path="/generate" element={<ContentWrapper><Generate /></ContentWrapper>} />
-              <Route path="/my_pods" element={<ContentWrapper><MyPods /></ContentWrapper>} />
-              <Route path="/topic/:id" element={<ContentWrapper><TopicPage /></ContentWrapper>} />
-              <Route path="*" element={<ContentWrapper><NotFoundPage /></ContentWrapper>} />
+              <Route
+                path="/"
+                element={<ContentWrapper><HomePage /></ContentWrapper>}
+              />
+              <Route
+                path="/generate"
+                element={<ContentWrapper><Generate /></ContentWrapper>}
+              />
+              <Route
+                path="/my_pods"
+                element={
+                  <ContentWrapper>
+                    <MyPods onMediaSourceUpdate={updateMediaSource} />
+                  </ContentWrapper>
+                }
+              />
+              <Route
+                path="/global"
+                element={<ContentWrapper><TopicPage /></ContentWrapper>}
+              />
+              <Route
+                path="*"
+                element={<ContentWrapper><NotFoundPage /></ContentWrapper>}
+              />
             </Routes>
+            <MediaPlayer source={mediaSource} />
           </>
         ) : (
           <>
             <h1>Gen My Pod</h1>
-            <p className="read-the-docs">
-              Sign in to get started
-            </p>
+            <p className="read-the-docs">Sign in to get started</p>
             <GoogleLogin
               onSuccess={handleSignInSuccess}
               onError={handleSignInFailure}

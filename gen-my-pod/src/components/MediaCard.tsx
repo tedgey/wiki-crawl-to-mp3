@@ -63,11 +63,11 @@ const MediaCard: React.FC<MediaCardProps> = ({ topic, subject }) => {
   }, [formattedTopic, subject]); // Re-run the effect when 'topic' or 'subject' changes
 
   return (
-    <div className='card'>
+    <div className='card overflow-auto'>
       <div className="d-flex flex-column align-items-center">
         <h2>{subject}</h2>
         <StyledImage
-          src={imageSrc || 'https://via.placeholder.com/400'} // Use a placeholder if the image fails to load
+          src={imageSrc || 'https://placehold.co/400'} // Use a placeholder if the image fails to load
           alt={subject}
         />
         <div className="p-3">

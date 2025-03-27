@@ -52,7 +52,7 @@ const SecondaryNav: React.FC<SecondaryNavProps> = ({ topic, onSubjectSelect }) =
   };
 
   return (
-    <CustomCard className="card">
+    <CustomCard className='card overflow-auto'>
       <div className="d-flex justify-content-between">
         <h5>{topic}</h5>
       </div>

@@ -1,5 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause, faStepBackward, faStepForward } from '@fortawesome/free-solid-svg-icons';
 
 interface MediaPlayerProps {
   source: string; // The source URL for the audio file
@@ -32,7 +34,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ source, playlist = [] }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [volume, setVolume] = useState<number>(1); // Volume range: 0 to 1
+  const [volume, setVolume] = useState<number>(0.5); // Default volume set to 0.5 (half)
 
   const currentSource = playlist.length > 0 ? playlist[currentTrackIndex] : source;
 
@@ -43,10 +45,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ source, playlist = [] }) => {
     }
   };
 
-  const stopAudio = () => {
+  const pauseAudio = () => {
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      audioRef.current.pause(); // Pause the audio without resetting the playback position
       setIsPlaying(false);
     }
   };
@@ -75,6 +76,21 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ source, playlist = [] }) => {
     }
   };
 
+  // Set the default volume to 0.5 when the component mounts
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.5;
+    }
+  }, []);
+
+  // Automatically play audio when the source is updated
+  useEffect(() => {
+    if (audioRef.current && currentSource) {
+      audioRef.current.load(); // Reload the audio element with the new source
+      playAudio(); // Automatically play the audio
+    }
+  }, [currentSource]); // Trigger this effect when currentSource changes
+
   return (
     <MediaPlayerContainer>
       <audio
@@ -82,17 +98,16 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ source, playlist = [] }) => {
         src={currentSource || undefined} // Pass undefined if currentSource is an empty string
         onEnded={nextTrack} // Automatically play the next track when the current one ends
       />
-      <h3>Now Playing</h3>
       <p>{currentSource ? currentSource.split('/').pop() : 'No track selected'}</p>
       <Controls>
         <button onClick={previousTrack} disabled={playlist.length === 0} className="btn btn-primary">
-          Previous
+          <FontAwesomeIcon icon={faStepBackward} /> {/* Previous Icon */}
         </button>
-        <button onClick={isPlaying ? stopAudio : playAudio} className="btn btn-primary">
-          {isPlaying ? 'Stop' : 'Play'}
+        <button onClick={isPlaying ? pauseAudio : playAudio} className="btn btn-primary">
+          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} /> {/* Pause/Play Icon */}
         </button>
         <button onClick={nextTrack} disabled={playlist.length === 0} className="btn btn-primary">
-          Next
+          <FontAwesomeIcon icon={faStepForward} /> {/* Next Icon */}
         </button>
       </Controls>
       <div>

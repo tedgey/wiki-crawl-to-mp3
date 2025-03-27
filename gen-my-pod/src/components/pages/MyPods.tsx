@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import SideNav from '../SideNav.tsx';
 import SecondaryNav from '../SecondaryNav.tsx';
 import MediaCard from '../MediaCard.tsx';
@@ -6,6 +7,14 @@ import { useState } from 'react';
 interface MyPodsProps {
   onMediaSourceUpdate: (topic: string, subject: string) => void; // Function to update MediaPlayer source
 }
+
+// Styled component for the main container
+const MyPodsContainer = styled.div`
+  max-height: 75vh;
+  overflow: hidden;
+  display: flex;
+  background-color: #f8f9fa; /* Optional: Matches the bg-light class */
+`;
 
 const MyPods: React.FC<MyPodsProps> = ({ onMediaSourceUpdate }) => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -29,7 +38,7 @@ const MyPods: React.FC<MyPodsProps> = ({ onMediaSourceUpdate }) => {
   };
 
   return (
-    <div className="main d-flex bg-light">
+    <MyPodsContainer>
       {/* Side Navigation for Topics */}
       <SideNav onTopicSelect={handleTopicSelect} />
 
@@ -42,7 +51,7 @@ const MyPods: React.FC<MyPodsProps> = ({ onMediaSourceUpdate }) => {
       {selectedTopic && selectedSubject && (
         <MediaCard topic={selectedTopic} subject={selectedSubject} />
       )}
-    </div>
+    </MyPodsContainer>
   );
 };
 

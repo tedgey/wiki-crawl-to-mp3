@@ -50,6 +50,10 @@ async function generateFiles(names, topic) {
     // Then run generateTextAndAudio
     await generateTextAndAudio(names, topic);
     console.log('Finished generating text and audio.');
+
+    // Finally, run generateImage
+    await generateImage(names, topic);
+    console.log('Finished generating images.');
   } catch (error) {
     console.error('Error in generateFiles:', error);
     throw error;
@@ -181,6 +185,29 @@ async function textToSpeech(text, fileName, topic) {
   }
 }
 
+async function generateImage(nameArr, topic) {
+  console.log('Generating image for:', nameArr);
+  try {
+    const pythonPath = path.join(__dirname, '../.venv/Scripts/python.exe'); // Path to Python in virtual environment
+    const scriptPath = path.join(__dirname, '../scripts/scrape_images.py');
+    const command = `${pythonPath} ${scriptPath} "${nameArr.join(' ')}" "${topic}"`;
+
+    console.log('Executing command:', command);
+
+    // Use execPromise to wait for the script to finish
+    const { stdout, stderr } = await execPromise(command);
+
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+    }
+
+    console.log(`stdout: ${stdout}`);
+  } catch (error) {
+    console.error('Error in generateImage:', error);
+    throw error;
+  }
+}
+
 // API endpoint to generate files
 app.post('/generate-files', async (req, res) => {
   let { name, topic } = req.body;
@@ -298,6 +325,29 @@ app.get('/get-text/:topic/:fileName', async (req, res) => {
   } catch (error) {
     console.error('Error in /get-text/:topic/:fileName:', error);
     res.status(500).send(`Error getting text file ${fileName}.txt for topic ${topic}: ${error}`);
+  }
+});
+
+// API endpoint to get the image file for a specific topic and file name
+app.get('/get-image/:topic/:fileName', async (req, res) => {
+  const { topic, fileName } = req.params;
+
+  // Construct the S3 key based on the new format
+  const s3Key = `images/${topic}/${fileName.replace(' ', '_')}/${fileName}_1.jpeg`;
+  const s3Params = {
+    Bucket: 'make-my-pod',
+    Key: s3Key,
+  };
+
+  try {
+    const s3Object = await s3.send(new GetObjectCommand(s3Params));
+    const imageStream = s3Object.Body;
+
+    res.set('Content-Type', 'image/jpeg');
+    imageStream.pipe(res);
+  } catch (error) {
+    console.error('Error in /get-image/:topic/:fileName:', error);
+    res.status(500).send(`Error getting image file ${fileName}_1.jpeg for topic ${topic}: ${error}`);
   }
 });
 

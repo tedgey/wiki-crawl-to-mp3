@@ -1,9 +1,12 @@
 const express = require('express');
 require('dotenv').config();
 const OpenAI = require('openai');
-const fs = require('fs'); 
 const path = require('path');
-const { exec } = require('child_process'); // Add this line
+const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 const app = express();
 const cors = require('cors');
@@ -12,192 +15,196 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
+// Initialize the S3 client
+const s3 = new S3Client({ region: 'us-east-2' }); // Replace with your bucket's region
+
+function capitalizeWords(input) {
+  return input
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+// Helper function to convert stream to string
+async function streamToString(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString('utf-8');
+}
+
+// Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Function to generate files
 async function generateFiles(names, topic) {
-  const directories = [
-    '../content',
-    '../content/generated_text',
-    '../content/generated_audio',
-    `../content/generated_audio/${topic}`,
-    '../images',
-    `../images/${topic}`
-  ];
-
-  directories.forEach(dir => {
-    const dirPath = path.join(__dirname, dir);
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath);
-    }
-  });
-
-  Promise.all([
-    await scrapeArticles(names),
-    await generateTextAndAudio(names, topic)
-  ]);
-
-  // await scrapeImages(names, topic);
-}
-
-async function scrapeArticles(nameArr) {
-  console.log('Scraping articles for:', nameArr);
-  const scrapedArticlesDir = path.join(__dirname, '../content/scraped_articles');
-  if (!fs.existsSync(scrapedArticlesDir)) {
-    fs.mkdirSync(scrapedArticlesDir);
-  }
+  console.log('Generating files for:', names);
 
   try {
-    // Use the Python executable from the virtual environment
-    const pythonPath = path.join(__dirname, '../.venv/Scripts/python.exe'); // Path to .venv Python
-    const scriptPath = path.join(__dirname, '../scripts/scrape_wikipedia.py');
-    const command = `${pythonPath} ${scriptPath} "${nameArr}"`; // Pass names as arguments
+    // Run scrapeArticles first
+    await scrapeArticles(names, topic);
+    console.log('Finished scraping articles.');
 
-    console.log('Command:', command); // Debugging: Log the command being executed
-
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`ErrorSA1: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.error(`stderr: ${stderr}`);
-        return;
-      }
-      console.log(`stdout: ${stdout}`);
-    });
+    // Then run generateTextAndAudio
+    await generateTextAndAudio(names, topic);
+    console.log('Finished generating text and audio.');
   } catch (error) {
-    console.error("ErrorSA2:", error);
+    console.error('Error in generateFiles:', error);
+    throw error;
   }
 }
 
+// Function to scrape articles
+async function scrapeArticles(nameArr, topic) {
+  console.log('Scraping articles for:', nameArr);
+
+  try {
+    const pythonPath = path.join(__dirname, '../.venv/Scripts/python.exe'); // Path to Python in virtual environment
+    const scriptPath = path.join(__dirname, '../scripts/scrape_wikipedia.py');
+    const command = `${pythonPath} ${scriptPath} "${nameArr.join(' ')}" "${topic}"`;
+
+    console.log('Executing command:', command);
+
+    // Use execPromise to wait for the script to finish
+    const { stdout, stderr } = await execPromise(command);
+
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+    }
+
+    console.log(`stdout: ${stdout}`);
+  } catch (error) {
+    console.error('ErrorSA2:', error);
+    throw error;
+  }
+}
+
+// Function to generate text and audio
 async function generateTextAndAudio(nameArr, topic) {
   console.log('Generating text and audio for:', nameArr);
-  // Loop through the name array to generate text for each name
-  //if scraped_articles folder does not exist, create it
-  const scrapedArticlesDir = path.join(__dirname, '../content/scraped_articles');
-  if (!fs.existsSync(scrapedArticlesDir)) {
-    fs.mkdirSync(scrapedArticlesDir);
-  }
 
   for (const name of nameArr) {
     try {
-      // Read the content of the text file
-      console.log('Processing name:', name); // Debugging: Log the name being processed
-      let fileName = name.replace(/\s/g, '');
-      const fileContent = fs.readFileSync(path.join(__dirname, `../content/scraped_articles/${fileName}.txt`), "utf-8");
+      const fileName = name.replace(/\s/g, '');
+      const s3KeyInput = `scraped-articles/${topic}/${fileName}.txt`;
+      const s3KeyOutput = `scripts/${topic}/${fileName}.txt`;
+
+      console.log('Fetching file from S3 with key:', s3KeyInput);
+
+      // Fetch the file content from S3
+      const s3ParamsInput = {
+        Bucket: 'make-my-pod',
+        Key: s3KeyInput,
+      };
+
+      let fileContent;
+      try {
+        const s3Object = await s3.send(new GetObjectCommand(s3ParamsInput));
+        fileContent = await streamToString(s3Object.Body);
+      } catch (error) {
+        if (error.name === 'NoSuchKey') {
+          console.error(`File not found in S3: ${s3KeyInput}`);
+          continue; // Skip to the next name
+        }
+        throw error; // Re-throw other errors
+      }
 
       // Prepare the prompt
-      const prompt = `Use the following text to create a script for a youtube essay: \n\n${fileContent}`;
+      const prompt = `Use the following text to create a script for a YouTube essay: \n\n${fileContent}`;
 
       // Call the OpenAI API
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         messages: [
-          { role: "developer", content: "You are a creative writer and youtuber. You will be presenting a video essay based on a txt file. Please respond solely with what you will say as the narrator of the script, with no scene directions. It is vital to keep your response to under 4000 characters." },
-          { role: "user", content: prompt}
-        ]
+          { role: 'developer', content: 'You are a creative writer and YouTuber. You are creating a script based on a .txt file that will then be read out loud. Please respond solely with what you will say as the narrator of the script, with no scene directions. It is vital to keep your response to under 4500 characters.' },
+          { role: 'user', content: prompt },
+        ],
       });
 
-      // Extract and log the generated text
       const generatedText = response.choices[0]?.message?.content;
       if (!generatedText) {
         throw new Error('No text generated by OpenAI API');
       }
 
+      // Upload the generated text to S3
+      const s3ParamsOutput = {
+        Bucket: 'make-my-pod',
+        Key: s3KeyOutput,
+        Body: generatedText,
+        ContentType: 'text/plain',
+        ACL: 'private',
+      };
+
+      await s3.send(new PutObjectCommand(s3ParamsOutput));
+      console.log(`Generated text uploaded to s3://make-my-pod/${s3KeyOutput}`);
+
+      // Generate audio from the text
       await textToSpeech(generatedText, fileName, topic);
-      // Save the generated text to a file
-      fs.writeFileSync(path.join(__dirname, `../content/generated_text/${fileName}.txt-script`), generatedText);
     } catch (error) {
-      console.error("ErrorGTAA1:", error);
+      console.error('ErrorGTAA1:', error);
     }
   }
 }
 
+// Function to generate audio and upload to S3
 async function textToSpeech(text, fileName, topic) {
-  console.log('start text to speech', fileName);
-  const speechFile = path.resolve(__dirname, `../content/generated_audio/${topic}/${fileName}.mp3`);
-  const mp3 = await openai.audio.speech.create({
-    model: "tts-1",
-    voice: "alloy",
-    input: text,
-  });
-  const buffer = Buffer.from(await mp3.arrayBuffer());
-  await fs.promises.writeFile(speechFile, buffer);
-  console.log('Audio file saved:', speechFile);
+  console.log('Start text-to-speech for:', fileName);
+
+  try {
+    // Generate the MP3 audio using OpenAI API
+    const mp3 = await openai.audio.speech.create({
+      model: 'tts-1',
+      voice: 'alloy',
+      input: text,
+    });
+
+    const buffer = Buffer.from(await mp3.arrayBuffer());
+
+    // Define the S3 key for the MP3 file
+    const s3Key = `mp3s/${topic}/${fileName}.mp3`;
+
+    // Upload the MP3 file to S3
+    const s3Params = {
+      Bucket: 'make-my-pod',
+      Key: s3Key,
+      Body: buffer,
+      ContentType: 'audio/mpeg',
+      ACL: 'private',
+    };
+
+    await s3.send(new PutObjectCommand(s3Params));
+    console.log(`Audio file uploaded to s3://make-my-pod/${s3Key}`);
+  } catch (error) {
+    console.error('Error in text-to-speech:', error);
+  }
 }
 
-async function scrapeImages(args = [], topic) {
-  // Access scrape_images.py in the scripts folder and pass in the names array
-  const quotedArgs = args.map(name => `"${name}"`).join(' ');
-
-  exec(`python3 ${path.join(__dirname, '../scripts/scrape_images.py')} ${quotedArgs} ${topic}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`ErrorSI1: ${error.message}`);
-      return;
-    }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-  });
-}
-
+// API endpoint to generate files
 app.post('/generate-files', async (req, res) => {
   let { name, topic } = req.body;
 
-  console.log('Request payload:', req.body);
+  console.log('Request payload before capitalization:', req.body);
 
-  // Normalize `name` to always be an array of strings
-  const nameArr = Array.isArray(name) ? name : [name];
+  // Normalize and capitalize `name` and `topic`
+  const nameArr = Array.isArray(name) ? name.map(capitalizeWords) : [capitalizeWords(name)];
+  topic = capitalizeWords(topic);
 
-  console.log('Normalized nameArr:', nameArr);
-  console.log('topic:', topic);
+  console.log('Capitalized nameArr:', nameArr);
+  console.log('Capitalized topic:', topic);
 
   try {
     await generateFiles(nameArr, topic);
     res.status(200).send('Text and audio generated successfully');
   } catch (error) {
+    console.error('Error in /generate-files:', error);
     res.status(500).send(`Error generating text and audio: ${error}`);
   }
 });
 
-app.post('/generate-images', async (req, res) => {
-  let { nameArr, topic } = req.body;
-
-  try {
-    await scrapeImages(nameArr, topic);
-    res.status(200).send('Images generated successfully');
-  } catch (error) {
-    res.status(500).send(`Error generating images: ${error}`);
-  }
-});
-
-app.post('/generate-video', async (req, res) => {
-  let { nameArr } = req.body;
-
-  try {
-
-    exec(`python3 ${path.join(__dirname, '../scripts/combine.py')} ${ nameArr } `, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.error(`stderr: ${stderr}`);
-        return;
-      }
-      console.log(`stdout: ${stdout}`);
-    });
-
-    res.status(200).send('Video generated successfully');
-  } catch (error) {
-    res.status(500).send(`Error generating video: ${error}`);
-  }
-}),
-
+// Start the server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });

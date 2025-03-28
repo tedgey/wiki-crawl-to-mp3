@@ -41,7 +41,7 @@ exports.getTextFileFromS3 = async (topic, fileName) => {
 // Get an image file from S3
 exports.getImageFromS3 = async (topic, fileName) => {
   const sanitizedFileName = fileName.replace(/\s/g, '_');
-  const s3Key = `images/${topic}/${sanitizedFileName.replace(' ', '_')}/${sanitizedFileName}_1.jpeg`;
+  const s3Key = `images/${topic}/${sanitizedFileName}/${sanitizedFileName}_1.jpeg`;
   const s3Params = { Bucket: 'make-my-pod', Key: s3Key };
   const s3Object = await s3.send(new GetObjectCommand(s3Params));
   return s3Object.Body;

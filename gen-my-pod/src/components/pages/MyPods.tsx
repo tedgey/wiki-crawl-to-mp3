@@ -11,6 +11,7 @@ interface MyPodsProps {
 // Styled component for the main container
 const MyPodsContainer = styled.div`
   max-height: 75vh;
+  width: 100%;
   overflow: hidden;
   display: flex;
   background-color: #f8f9fa; /* Optional: Matches the bg-light class */
@@ -23,12 +24,10 @@ const MyPods: React.FC<MyPodsProps> = ({ onMediaSourceUpdate }) => {
   const handleTopicSelect = (topic: string) => {
     setSelectedTopic(topic); // Update the selected topic
     setSelectedSubject(null); // Reset the selected subject when a new topic is selected
-    console.log(`Topic selected: ${topic}`);
   };
 
   const handleSubjectSelect = (subject: string) => {
     setSelectedSubject(subject); // Update the selected subject
-    console.log(`Subject selected: ${subject}, Topic: ${selectedTopic}`);
 
     // Update MediaPlayer source when both topic and subject are selected
     if (selectedTopic) {

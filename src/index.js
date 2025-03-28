@@ -63,10 +63,22 @@ async function generateFiles(names, topic) {
   console.log('Generating files for:', names);
 
   try {
+    // Emit progress update for scraping articles
+    eventEmitter.emit('generateComplete', { status: 'progress', step: 'scrapeArticles', message: 'Scraping wiki article.' });
     await scrapeArticles(names, topic);
-    await generateTextAndAudio(names, topic);
-    await generateImage(names, topic);
+    eventEmitter.emit('generateComplete', { status: 'progress', step: 'scrapeArticlesSuccess', message: 'Articles scraped successfully.' });
 
+    // Emit progress update for generating text and audio
+    eventEmitter.emit('generateComplete', { status: 'progress', step: 'generateTextAndAudio', message: 'Generating text and audio.' });
+    await generateTextAndAudio(names, topic);
+    eventEmitter.emit('generateComplete', { status: 'progress', step: 'generateTextAndAudioSuccess', message: 'Text and audio generated successfully.' });
+
+    // Emit progress update for generating images
+    eventEmitter.emit('generateComplete', { status: 'progress', step: 'generateImage', message: 'Scraping images.' });
+    await generateImage(names, topic);
+    eventEmitter.emit('generateComplete', { status: 'progress', step: 'generateImageSuccess', message: 'Images generated successfully.' });
+
+    // Emit final success message
     console.log('Finished generating files.');
     eventEmitter.emit('generateComplete', { status: 'success', topic, names });
   } catch (error) {

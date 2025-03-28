@@ -29,7 +29,6 @@ function App() {
   const updateMediaSource = (topic: string, subject: string) => {
     const source = `http://d31ask49tnw722.cloudfront.net/mp3s/${topic}/${subject}.mp3`;
     setMediaSource(source);
-    console.log(`Media source updated to: ${source}`);
   };
 
   return (
@@ -69,11 +68,18 @@ function App() {
         ) : (
           <>
             <h1>Gen My Pod</h1>
-            <p className="read-the-docs">Sign in to get started</p>
-            <GoogleLogin
-              onSuccess={handleSignInSuccess}
-              onError={handleSignInFailure}
-            />
+            <hr />
+            <div className="d-flex justify-content-center align-items-center vh-100">
+              <div className="text-center">
+                <h2>Welcome to Gen My Pod</h2>
+                <p>Please sign in to continue</p>
+              
+              <GoogleLogin
+                onSuccess={handleSignInSuccess}
+                onError={handleSignInFailure}
+              />
+              </div>
+            </div>
           </>
         )}
       </Router>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 
 const CustomCard = styled.div`
@@ -6,18 +6,18 @@ const CustomCard = styled.div`
   height: fit-content;
 `;
 
-const StyledListItem = styled.li<{ isSelected: boolean }>`
-  a {
-    color: ${(props) => (props.isSelected ? '#007bff' : 'inherit')};
-    font-weight: ${(props) => (props.isSelected ? 'bold' : 'normal')};
-    cursor: pointer;
-    text-decoration: ${(props) => (props.isSelected ? 'underline' : 'none')};
-  }
+// const StyledListItem = styled.li<{ isSelected: boolean }>`
+//   a {
+//     color: ${(props) => (props.isSelected ? '#007bff' : 'inherit')};
+//     font-weight: ${(props) => (props.isSelected ? 'bold' : 'normal')};
+//     cursor: pointer;
+//     text-decoration: ${(props) => (props.isSelected ? 'underline' : 'none')};
+//   }
 
-  a:hover {
-    text-decoration: underline;
-  }
-`;
+//   a:hover {
+//     text-decoration: underline;
+//   }
+// `;
 
 interface SecondaryNavProps {
   topic: string;
@@ -29,22 +29,29 @@ const SecondaryNav: React.FC<SecondaryNavProps> = ({ topic, onSubjectSelect }) =
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null); // State to track the selected subject
 
   // Fetch subjects from the /list-files/:topic endpoint
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return; // Skip the first effect run
+    }
+  
     const fetchSubjects = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/list-files/${topic}`); // Replace with your endpoint URL
+        const response = await fetch(`http://localhost:3000/list-files/${topic}`);
         if (!response.ok) {
           throw new Error('Failed to fetch subjects');
         }
         const data = await response.json();
-        setSubjects(data); // Assuming the endpoint returns an array of subject strings
+        setSubjects(data);
       } catch (error) {
         console.error('Error fetching subjects:', error);
       }
     };
-
+  
     fetchSubjects();
-  }, [topic]); // Re-run the effect when the topic changes
+  }, [topic]);
 
   const handleSubjectClick = (subject: string) => {
     setSelectedSubject(subject); // Update the selected subject

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Generate = () => {
   const [name, setName] = useState('');
@@ -6,6 +7,9 @@ const Generate = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [progress, setProgress] = useState<string[]>([]); // Track progress updates as an array
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const eventSource = new EventSource('http://localhost:3000/events');
@@ -13,14 +17,15 @@ const Generate = () => {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      if (data.status === 'success') {
+      if (data.status === 'progress') {
+        setProgress((prevProgress) => [...prevProgress, `Step: ${data.step} - ${data.message}`]);
+      } else if (data.status === 'success') {
         setLoading(false);
         setSuccess('Success! Redirecting...');
-        console.log('Files generated successfully:', data);
 
         // Redirect to /my_pods after a short delay
         setTimeout(() => {
-          window.location.href = '/my_pods';
+          navigate('/my_pods', { state: { topic, name } }); // Pass topic and name via state
         }, 2000);
       } else if (data.status === 'error') {
         setLoading(false);
@@ -40,16 +45,14 @@ const Generate = () => {
     return () => {
       eventSource.close();
     };
-  }, []);
+  }, [navigate, topic, name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission behavior
     setLoading(true);
     setError('');
     setSuccess('');
-
-    console.log('Name:', name); // Debugging: Log the `name` state
-    console.log('Topic:', topic); // Debugging: Log the `topic` state
+    setProgress([]); // Reset progress array
 
     try {
       const response = await fetch('http://localhost:3000/generate-files', {
@@ -60,16 +63,14 @@ const Generate = () => {
         body: JSON.stringify({ name, topic }),
       });
 
-      console.log('response', response);
-
       if (response.status !== 200) {
         throw new Error('Failed to generate pod. Please try again.');
       }
 
-      setSuccess('Generating...');
+      setSuccess('Pod Generated! Redirecting...');
     } catch (err: unknown) {
       setError('An error occurred. Please try again.');
-      console.log('Error generating pod:', err);
+      console.error('Error generating pod:', err);
     } finally {
       setLoading(false);
     }
@@ -107,6 +108,16 @@ const Generate = () => {
           {loading ? 'Generating...' : 'Generate Pod'}
         </button>
       </form>
+
+      {/* Display progress updates as a list */}
+      {progress.length > 0 && (
+        <ul className="text-info mt-2">
+          {progress.map((step, index) => (
+            <li key={index}>{step}</li>
+          ))}
+        </ul>
+      )}
+
       {error && <p className="text-danger mt-2">{error}</p>}
       {success && <p className="text-success mt-2">{success}</p>}
     </div>

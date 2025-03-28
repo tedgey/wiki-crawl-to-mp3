@@ -18,7 +18,7 @@ const Generate = () => {
       const data = JSON.parse(event.data);
 
       if (data.status === 'progress') {
-        setProgress((prevProgress) => [...prevProgress, `Step: ${data.step} - ${data.message}`]);
+        setProgress((prevProgress) => [...prevProgress, `${data.message}`]);
       } else if (data.status === 'success') {
         setLoading(false);
         setSuccess('Success! Redirecting...');

@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'User',
+      tableName: 'Users', // Explicitly set the table name to 'Users'
     }
   )
   return User

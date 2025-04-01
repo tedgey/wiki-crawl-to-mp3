@@ -1,4 +1,5 @@
 Frontend and db in progress...
+- piviting from video to spotify-style podcast app so a lot of below no longer applies
 
 TLDR: You can take a list of names and generate a youtube-style video essay based off of their wikipedia 
 article, as well as download x (default 10) pictures of each person listed- all at the click of a button.

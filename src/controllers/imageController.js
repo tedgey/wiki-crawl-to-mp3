@@ -1,17 +1,21 @@
-const { getImageFromS3 } = require('../services/s3Service');
+const { getImageFromS3 } = require('../services/s3Service')
 
 exports.getImageFile = async (req, res) => {
-  const { topic, fileName } = req.params;
+  const { topic, fileName } = req.params
 
   try {
-    const imageStream = await getImageFromS3(topic, fileName);
-    res.set('Content-Type', 'image/jpeg');
-    imageStream.pipe(res);
+    const imageStream = await getImageFromS3(topic, fileName)
+    res.set('Content-Type', 'image/jpeg')
+    imageStream.pipe(res)
   } catch (error) {
-    console.error('Error in /get-image/:topic/:fileName:', error);
-    res.status(500).send(`Error getting image file ${fileName}_1.jpeg for topic ${topic}: ${error.message}`);
+    console.error('Error in /get-image/:topic/:fileName:', error)
+    res
+      .status(500)
+      .send(
+        `Error getting image file ${fileName}_1.jpeg for topic ${topic}: ${error.message}`
+      )
   }
-};
+}
 
 // app.get('/get-image/:topic/:fileName', async (req, res) => {
 //   const { topic, fileName } = req.params;

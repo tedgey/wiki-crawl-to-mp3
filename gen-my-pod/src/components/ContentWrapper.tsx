@@ -1,11 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode } from 'react'
 
 const ContentWrapper = ({ children }: { children: ReactNode }) => {
-  return (
-    <div className="main d-flex bg-light">
-      {children}
-    </div>
-  );
-};
+  return <div className='main d-flex bg-light'>{children}</div>
+}
 
-export default ContentWrapper;
+export default ContentWrapper

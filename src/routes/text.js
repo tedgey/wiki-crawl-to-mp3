@@ -1,9 +1,9 @@
-const express = require('express');
-const { getTextFile } = require('../controllers/textController');
+const express = require('express')
+const { getTextFile } = require('../controllers/textController')
 
-const router = express.Router();
+const router = express.Router()
 
 // Endpoint to get a text file
-router.get('/:topic/:fileName', getTextFile);
+router.get('/:topic/:fileName', getTextFile)
 
-module.exports = router;
+module.exports = router

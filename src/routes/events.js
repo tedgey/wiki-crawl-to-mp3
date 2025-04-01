@@ -1,9 +1,9 @@
-const express = require('express');
-const { eventsHandler } = require('../controllers/eventsController');
+const express = require('express')
+const { eventsHandler } = require('../controllers/eventsController')
 
-const router = express.Router();
+const router = express.Router()
 
 // SSE endpoint
-router.get('/', eventsHandler);
+router.get('/', eventsHandler)
 
-module.exports = router;
+module.exports = router

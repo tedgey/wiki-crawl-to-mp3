@@ -1,3 +1,5 @@
+Frontend and db in progress...
+
 TLDR: You can take a list of names and generate a youtube-style video essay based off of their wikipedia 
 article, as well as download x (default 10) pictures of each person listed- all at the click of a button.
 
